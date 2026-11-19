@@ -1,0 +1,9 @@
+# Training and export dependencies. Keep these out of backend/requirements.txt.
+torch>=2.4,<3
+torchvision>=0.19,<1
+numpy>=1.26,<3
+Pillow>=10,<13
+scikit-learn>=1.5,<2
+matplotlib>=3.9,<4
+onnx>=1.17,<2
+onnxruntime>=1.20,<2

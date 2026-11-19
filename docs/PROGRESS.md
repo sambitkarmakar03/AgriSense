@@ -61,3 +61,11 @@
 - Verification: `npm run lint` passed; `npm run build` passed with route-level code splitting and no chunk-size warning.
 - No browser end-to-end session or frontend test suite was run; the repository had no frontend test setup and E2E was excluded by the task.
 - Disease diagnosis, agronomist review, rule editing, and analytics remain deferred because those API workflows are not implemented in Phase 1.
+
+## Phase 3 ML training pipeline (2026-11-19)
+- Added the MobileNetV2 PlantVillage training, evaluation, quantization, and five-image ONNX parity pipeline under `ml/`.
+- Verified the Kaggle PlantVillage source folder names and fixed model output order; mapping is centralized in `ml/train.py`.
+- Added Kaggle notebook, separate training requirements, usage instructions, and report directory placeholder. Backend requirements and Phase 0–2 code remain unchanged.
+- Local verification: 4 ML helper tests passed; backend pytest passed (29); Python compile and notebook JSON/code-cell parsing passed.
+- Training was not run: this workspace has no PlantVillage dataset or usable CUDA training runtime. No trained model, labels, or evaluation reports are claimed or committed.
+- To generate deliverables, run `ml/train_kaggle.ipynb` on Kaggle with a GPU, Internet enabled, and PlantVillage attached; download its artifact ZIP after all parity checks pass.
