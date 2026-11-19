@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.Python
+.venv/
+venv/
+env/
+build/
+dist/
+.eggs/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Node.js / frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+.npm/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+
+# Local databases, logs, and editor state
+*.db
+*.sqlite
+*.sqlite3
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Jupyter temporary files
+.ipynb_checkpoints/

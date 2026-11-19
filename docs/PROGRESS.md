@@ -39,3 +39,10 @@
 - Source audit found no non-empty literal secrets or heavy ML/data dependencies.
 - Disease diagnosis, diagnosis feedback/history/review, review queue, and analytics remain deferred; no disease-detection code was added.
 - Limitation: CSV throttling is process-local; a multi-worker deployment should also rate-limit at its gateway.
+
+
+## Phase 0 + Phase 1 GitHub handoff
+- Reconciled the README with the implemented backend and explicitly deferred frontend, disease, CI, and deployment work.
+- Reviewed the Phase 0 root files, `.env.example`, ignore rules, backend artifacts, tests, migrations, and OpenAPI before staging.
+- Configured `origin` to the requested AgriSense GitHub URL; the read-only fetch returned no branch refs at handoff inspection.
+- Existing Phase 1 commits are preserved; the handoff adds the remaining Phase 0 foundation without rewriting existing history.
