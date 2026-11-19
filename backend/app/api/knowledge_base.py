@@ -1,10 +1,9 @@
-from datetime import datetime
 from pathlib import Path
 import re
 from typing import Any
 
 import yaml
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -12,7 +11,7 @@ from app.api.deps import get_current_user, require_roles
 from app.api.schemas import KBRead, KBUpdateRequest, KBVersionRead
 from app.db.models import KBVersion, User
 from app.db.session import get_db
-from app.expert.engine import load_builtin_knowledge_base, parse_knowledge_base
+from app.expert.engine import parse_knowledge_base
 
 router = APIRouter(prefix="/kb", tags=["knowledge base"])
 KB_DIRECTORY = Path(__file__).resolve().parents[1] / "expert"
@@ -51,24 +50,47 @@ def _validate_editable_irrigation_yaml(yaml_text: str) -> dict[str, Any]:
     try:
         data = parse_knowledge_base(yaml_text)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
-    ids = {str(rule["id"]) for rule in data["rules"]}
-    missing = REQUIRED_IRRIGATION_RULES - ids
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    by_id = {str(rule["id"]): rule for rule in data["rules"]}
+    missing = REQUIRED_IRRIGATION_RULES - set(by_id)
     if missing:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=422,
             detail=f"Irrigation knowledge base is missing required rules: {', '.join(sorted(missing))}.",
+        )
+    if by_id["IR-2"]["priority"] != 1:
+        raise HTTPException(
+            status_code=422,
+            detail="IR-2 must retain priority 1 so heavy forecast rain takes precedence.",
         )
     return data
 
 
 @router.get("/{kind}", response_model=KBRead)
-def get_knowledge_base(kind: str, db: Session = Depends(get_db), _user: User = Depends(get_current_user)) -> KBRead:
+def get_knowledge_base(
+    kind: str,
+    version: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+) -> KBRead:
     _require_irrigation_kind(kind)
-    version, yaml_text, record = get_effective_knowledge_base(db)
+    if version is None:
+        selected_version, yaml_text, record = get_effective_knowledge_base(db)
+    else:
+        record = db.scalar(
+            select(KBVersion).where(KBVersion.kind == kind, KBVersion.version == version).limit(1)
+        )
+        if record is not None:
+            selected_version, yaml_text = record.version, record.yaml_text
+        elif version in {"v1", "v2"}:
+            selected_version = version
+            yaml_text = (KB_DIRECTORY / f"irrigation_kb_{version}.yaml").read_text(encoding="utf-8")
+            record = None
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Knowledge-base version not found.")
     return KBRead(
         kind=kind,
-        version=version,
+        version=selected_version,
         yaml_text=yaml_text,
         author_id=record.author_id if record else None,
         ts=record.ts if record else None,

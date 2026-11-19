@@ -34,6 +34,9 @@
               }
             }
           },
+          "503": {
+            "description": "JWT signing secret is not configured."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -74,6 +77,9 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "JWT signing secret is not configured."
           },
           "422": {
             "description": "Validation Error",
@@ -507,6 +513,9 @@
               }
             }
           },
+          "429": {
+            "description": "Per-user upload rate limit exceeded."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -764,6 +773,22 @@
             "schema": {
               "type": "string",
               "title": "Kind"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
             }
           }
         ],

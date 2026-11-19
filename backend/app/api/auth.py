@@ -6,11 +6,18 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.api.schemas import LoginRequest, RegisterRequest, TokenResponse, UserPublic
 from app.core.config import get_settings
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import configured_jwt_secret, create_access_token, hash_password, verify_password
 from app.db.models import ConsentLog, User
 from app.db.session import get_db
 
 router = APIRouter(tags=["authentication"])
+
+
+def _ensure_auth_configured() -> None:
+    try:
+        configured_jwt_secret()
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
 
 
 def _token_response(user: User) -> TokenResponse:
@@ -21,8 +28,14 @@ def _token_response(user: User) -> TokenResponse:
     return TokenResponse(access_token=token, user=UserPublic.model_validate(user))
 
 
-@router.post("/auth/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/auth/register",
+    response_model=TokenResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={503: {"description": "JWT signing secret is not configured."}},
+)
 def register(body: RegisterRequest, db: Session = Depends(get_db)) -> TokenResponse:
+    _ensure_auth_configured()
     if not body.consent_accepted:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Consent is required to register.")
     if db.scalar(select(User.id).where(User.email == body.email)) is not None:
@@ -49,8 +62,9 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> TokenRespo
     return _token_response(user)
 
 
-@router.post("/auth/login", response_model=TokenResponse)
+@router.post("/auth/login", response_model=TokenResponse, responses={503: {"description": "JWT signing secret is not configured."}})
 def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+    _ensure_auth_configured()
     user = db.scalar(select(User).where(User.email == body.email))
     if user is None or not verify_password(body.password, user.password_hash):
         raise HTTPException(

@@ -113,3 +113,32 @@ def test_unknown_rain_forecast_falls_back_to_review():
     assert result["action"] == "OFF"
     assert result["needs_review"] is True
     assert result["fired_rule_ids"] == []
+
+
+def test_priority_one_heavy_rain_rule_blocks_lower_priority_conflict():
+    knowledge_base = load_builtin_knowledge_base("v2")
+    knowledge_base["rules"].append(
+        {
+            "id": "CUSTOM-ON",
+            "priority": 99,
+            "conditions": {"rain_category": "heavy"},
+            "action": {"set": {"action": "ON"}},
+            "explanation": "A deliberately conflicting lower-priority test rule.",
+        }
+    )
+    result = evaluate_irrigation(
+        IrrigationInputs(80, 15, 31, 50, "Vegetative"), knowledge_base, "custom"
+    )
+    assert result["action"] == "OFF"
+    assert result["fired_rule_ids"] == ["IR-2"]
+
+
+def test_ir3_can_apply_duration_modifier_after_ir4_action():
+    result = evaluate_irrigation(
+        IrrigationInputs(45, 0, 37, 50, "Flowering"),
+        load_builtin_knowledge_base("v2"),
+        "v2",
+    )
+    assert result["action"] == "ON"
+    assert result["duration_level"] == "increased"
+    assert result["fired_rule_ids"] == ["IR-4", "IR-3"]

@@ -10,9 +10,11 @@ from app.api.deps import get_current_user, get_owned_field
 from app.api.schemas import CSVImportResponse, ReadingCreate, ReadingRead
 from app.db.models import Reading, User
 from app.db.session import get_db
+from app.core.rate_limit import UploadRateLimiter
 
 router = APIRouter(tags=["readings"])
 MAX_CSV_BYTES = 10 * 1024 * 1024
+csv_upload_limiter = UploadRateLimiter(max_requests=10, window_seconds=60)
 
 
 def _utc_datetime(raw: str | None) -> datetime:
@@ -76,7 +78,12 @@ def create_reading(
     return reading
 
 
-@router.post("/fields/{field_id}/readings/csv", response_model=CSVImportResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/fields/{field_id}/readings/csv",
+    response_model=CSVImportResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={429: {"description": "Per-user upload rate limit exceeded."}},
+)
 async def upload_readings_csv(
     field_id: int,
     file: UploadFile = File(...),
@@ -84,6 +91,7 @@ async def upload_readings_csv(
     user: User = Depends(get_current_user),
 ) -> CSVImportResponse:
     get_owned_field(field_id, db, user)
+    csv_upload_limiter.check(f"user:{user.id}")
     payload = await file.read(MAX_CSV_BYTES + 1)
     if len(payload) > MAX_CSV_BYTES:
         raise HTTPException(status_code=413, detail="CSV upload exceeds the 10 MB limit.")

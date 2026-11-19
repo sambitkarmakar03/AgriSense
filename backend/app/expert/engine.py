@@ -1,11 +1,20 @@
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
+import math
 from pathlib import Path
 from typing import Any
 
 import yaml
 
 KB_DIRECTORY = Path(__file__).resolve().parent
+_ALLOWED_FACTS = {
+    "moisture_category", "rain_category", "hot", "crop_stage", "soil_moisture_pct",
+    "rain_forecast_mm_24h", "temp_c", "humidity_pct", "recent_fungal_diagnosis",
+    "action", "duration_level",
+}
+_ALLOWED_OPERATORS = {"gt", "gte", "lt", "lte", "eq", "in"}
+_ALLOWED_STAGES = {"Seedling", "Vegetative", "Flowering", "Fruiting"}
+_ALLOWED_DURATIONS = {"normal", "increased", "short", "low_volume"}
 
 
 @dataclass(frozen=True)
@@ -28,27 +37,110 @@ def load_builtin_knowledge_base(version: str = "v2") -> dict[str, Any]:
     return parse_knowledge_base(path.read_text(encoding="utf-8"))
 
 
+def _number(value: Any, name: str, minimum: float | None = None, maximum: float | None = None) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)):
+        raise ValueError(f"Knowledge-base threshold {name} must be a finite number.")
+    numeric = float(value)
+    if minimum is not None and numeric < minimum:
+        raise ValueError(f"Knowledge-base threshold {name} must be at least {minimum}.")
+    if maximum is not None and numeric > maximum:
+        raise ValueError(f"Knowledge-base threshold {name} must be at most {maximum}.")
+    return numeric
+
+
 def parse_knowledge_base(yaml_text: str) -> dict[str, Any]:
     try:
         data = yaml.safe_load(yaml_text)
     except yaml.YAMLError as exc:
         raise ValueError(f"Knowledge base YAML is invalid: {exc}") from exc
-    if not isinstance(data, dict) or not isinstance(data.get("thresholds"), dict):
+    if not isinstance(data, dict):
+        raise ValueError("Knowledge base must be a mapping.")
+    if not isinstance(data.get("version", "custom"), str):
+        raise ValueError("Knowledge-base version must be a string.")
+
+    thresholds = data.get("thresholds")
+    if not isinstance(thresholds, dict):
         raise ValueError("Knowledge base must contain a thresholds mapping.")
+    moisture = thresholds.get("moisture")
+    rain = thresholds.get("rain")
+    if not isinstance(moisture, dict) or not isinstance(rain, dict):
+        raise ValueError("Knowledge base must define moisture and rain thresholds.")
+    low = _number(moisture.get("low_below_pct"), "moisture.low_below_pct", 0, 100)
+    medium = _number(moisture.get("medium_through_pct"), "moisture.medium_through_pct", low, 100)
+    none = _number(rain.get("none_below_mm"), "rain.none_below_mm", 0)
+    light = _number(rain.get("light_through_mm"), "rain.light_through_mm", none)
+    _number(thresholds.get("hot_above_c"), "hot_above_c")
+    _number(thresholds.get("fungal_diagnosis_within_days"), "fungal_diagnosis_within_days", 0)
+    labels = thresholds.get("fungal_labels")
+    if not isinstance(labels, list) or not labels or not all(isinstance(label, str) and label.strip() for label in labels):
+        raise ValueError("Knowledge base must define a non-empty fungal_labels list of strings.")
+    if medium < low or light < none:
+        raise ValueError("Knowledge-base category thresholds must be ordered from low to high.")
+
     rules = data.get("rules")
     if not isinstance(rules, list) or not rules:
         raise ValueError("Knowledge base must contain a non-empty rules list.")
     seen: set[str] = set()
     for rule in rules:
-        if not isinstance(rule, dict) or not isinstance(rule.get("id"), str):
-            raise ValueError("Each rule must have a string id.")
+        if not isinstance(rule, dict) or not isinstance(rule.get("id"), str) or not rule["id"].strip():
+            raise ValueError("Each rule must have a non-empty string id.")
         if rule["id"] in seen:
             raise ValueError(f"Duplicate rule id: {rule['id']}.")
         seen.add(rule["id"])
-        if not isinstance(rule.get("priority"), int):
+        if type(rule.get("priority")) is not int:
             raise ValueError(f"Rule {rule['id']} must have an integer priority.")
-        if not isinstance(rule.get("conditions"), dict) or not isinstance(rule.get("action"), dict):
-            raise ValueError(f"Rule {rule['id']} must have conditions and action mappings.")
+        conditions = rule.get("conditions")
+        action = rule.get("action")
+        if not isinstance(conditions, dict) or not conditions:
+            raise ValueError(f"Rule {rule['id']} must have a non-empty conditions mapping.")
+        if not isinstance(action, dict):
+            raise ValueError(f"Rule {rule['id']} must have an action mapping.")
+        for key, expected in conditions.items():
+            if key not in _ALLOWED_FACTS:
+                raise ValueError(f"Rule {rule['id']} uses unsupported fact {key!r}.")
+            values = expected.items() if isinstance(expected, dict) else [("eq", expected)]
+            if isinstance(expected, dict) and (not expected or not set(expected).issubset(_ALLOWED_OPERATORS)):
+                raise ValueError(f"Rule {rule['id']} uses an unsupported comparison operator.")
+            for operator, value in values:
+                if operator == "in":
+                    if not isinstance(value, list) or not value:
+                        raise ValueError(f"Rule {rule['id']} comparison 'in' requires a non-empty list.")
+                elif operator in {"gt", "gte", "lt", "lte"}:
+                    _number(value, f"{rule['id']}.{key}")
+            if key in {"action", "duration_level", "crop_stage", "moisture_category", "rain_category", "hot", "recent_fungal_diagnosis"} and isinstance(expected, dict):
+                raise ValueError(f"Rule {rule['id']} fact {key} requires a direct value, not a comparison mapping.")
+            if key == "action" and (not isinstance(expected, str) or expected not in {"ON", "OFF"}):
+                raise ValueError(f"Rule {rule['id']} action condition must be the string ON or OFF.")
+            if key == "duration_level" and (not isinstance(expected, str) or expected not in _ALLOWED_DURATIONS):
+                raise ValueError(f"Rule {rule['id']} has an invalid duration condition.")
+            if key == "crop_stage" and (not isinstance(expected, str) or expected not in _ALLOWED_STAGES):
+                raise ValueError(f"Rule {rule['id']} has an invalid crop-stage condition.")
+            if key == "moisture_category" and (not isinstance(expected, str) or expected not in {"low", "medium", "high"}):
+                raise ValueError(f"Rule {rule['id']} has an invalid moisture-category condition.")
+            if key == "rain_category" and (not isinstance(expected, str) or expected not in {"none", "light", "heavy", "unknown"}):
+                raise ValueError(f"Rule {rule['id']} has an invalid rain-category condition.")
+            if key in {"hot", "recent_fungal_diagnosis"} and type(expected) is not bool:
+                raise ValueError(f"Rule {rule['id']} fact {key} must be boolean.")
+            if key in {"soil_moisture_pct", "rain_forecast_mm_24h", "temp_c", "humidity_pct"} and not isinstance(expected, dict):
+                _number(expected, f"{rule['id']}.{key}")
+        updates = action.get("set", {})
+        if not isinstance(updates, dict):
+            raise ValueError(f"Rule {rule['id']} action.set must be a mapping.")
+        if set(action) - {"set", "advisory"}:
+            raise ValueError(f"Rule {rule['id']} has an unsupported action property.")
+        for key, value in updates.items():
+            if key == "action" and (not isinstance(value, str) or value not in {"ON", "OFF"}):
+                raise ValueError(f"Rule {rule['id']} action must be the string ON or OFF.")
+            if key == "duration_level" and (not isinstance(value, str) or value not in _ALLOWED_DURATIONS):
+                raise ValueError(f"Rule {rule['id']} has an invalid duration level.")
+            if key not in {"action", "duration_level"}:
+                raise ValueError(f"Rule {rule['id']} sets unsupported fact {key!r}.")
+        if not updates and not action.get("advisory"):
+            raise ValueError(f"Rule {rule['id']} must set a fact or provide an advisory.")
+        if "advisory" in action and not isinstance(action["advisory"], str):
+            raise ValueError(f"Rule {rule['id']} advisory must be a string.")
+        if "explanation" in rule and not isinstance(rule["explanation"], str):
+            raise ValueError(f"Rule {rule['id']} explanation must be a string.")
     data.setdefault("version", "custom")
     return data
 
@@ -140,18 +232,28 @@ def evaluate_irrigation(inputs: IrrigationInputs, knowledge_base: dict[str, Any]
     fired: list[str] = []
     explanations: list[str] = []
     advisories: list[str] = []
+    fact_priorities: dict[str, int] = {}
     for _ in range(len(rules) + 1):
         changed = False
         for rule in rules:
             if rule["id"] in fired or not _matches(rule["conditions"], facts):
                 continue
-            fired.append(rule["id"])
-            explanations.append(str(rule.get("explanation", f"Rule {rule['id']} fired.")))
             action = rule["action"]
             updates = action.get("set", {})
-            if not isinstance(updates, dict):
-                raise ValueError(f"Rule {rule['id']} action.set must be a mapping.")
+            action_update = updates.get("action")
+            conflicts = (
+                action_update is not None
+                and "action" in fact_priorities
+                and facts["action"] != action_update
+                and fact_priorities["action"] <= rule["priority"]
+            )
+            if conflicts:
+                continue
+            fired.append(rule["id"])
+            explanations.append(str(rule.get("explanation", f"Rule {rule['id']} fired.")))
             facts.update(updates)
+            if action_update is not None:
+                fact_priorities["action"] = min(fact_priorities.get("action", rule["priority"]), rule["priority"])
             advisory = action.get("advisory")
             if advisory:
                 advisories.append(str(advisory))

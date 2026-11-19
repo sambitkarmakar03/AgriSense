@@ -50,7 +50,7 @@ async def decide_irrigation(
     humidity = body.humidity_pct if body.humidity_pct is not None else (latest.humidity_pct if latest else None)
     if soil is None or temp is None or humidity is None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=422,
             detail="Provide soil moisture, temperature, and humidity or add a sensor reading first.",
         )
     rain = body.rain_forecast_mm_24h

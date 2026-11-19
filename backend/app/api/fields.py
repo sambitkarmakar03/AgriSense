@@ -39,7 +39,7 @@ def update_field(
     field = get_owned_field(field_id, db, user)
     updates = body.model_dump(exclude_unset=True)
     if not updates:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Provide at least one field to update.")
+        raise HTTPException(status_code=422, detail="Provide at least one field to update.")
     for name, value in updates.items():
         setattr(field, name, value)
     db.commit()

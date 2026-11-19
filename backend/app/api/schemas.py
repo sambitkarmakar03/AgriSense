@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 CropStage = Literal["Seedling", "Vegetative", "Flowering", "Fruiting"]
 Action = Literal["ON", "OFF"]
@@ -66,6 +66,13 @@ class FieldUpdate(BaseModel):
     crop_stage: CropStage | None = None
     lat: float | None = Field(default=None, ge=-90, le=90)
     lon: float | None = Field(default=None, ge=-180, le=180)
+
+    @model_validator(mode="after")
+    def reject_null_required_values(self):
+        for name in ("name", "crop", "crop_stage"):
+            if name in self.model_fields_set and getattr(self, name) is None:
+                raise ValueError(f"{name} cannot be null.")
+        return self
 
 
 class FieldRead(ORMModel):
