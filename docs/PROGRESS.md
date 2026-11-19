@@ -46,3 +46,18 @@
 - Reviewed the Phase 0 root files, `.env.example`, ignore rules, backend artifacts, tests, migrations, and OpenAPI before staging.
 - Configured `origin` to the requested AgriSense GitHub URL; the read-only fetch returned no branch refs at handoff inspection.
 - Existing Phase 1 commits are preserved; the handoff adds the remaining Phase 0 foundation without rewriting existing history.
+
+## Phase 2 frontend (2026-11-19)
+- Built a responsive React, Vite, TypeScript, Tailwind, and React Router farmer workspace with light and dark themes.
+- Added registration and login with backend consent validation, password visibility, form feedback, and session-scoped JWT handling.
+- Generated TypeScript API types from `docs/openapi.json` and added a central typed API client with timeout and error handling.
+- Added protected routes and a bounded `/health` wake sequence with manual retry and session restoration after recovery.
+- Implemented the dashboard with field totals, latest readings, weather, irrigation advice, and recent activity.
+- Implemented user-owned field listing, creation, editing, deletion confirmation, crop stages, and location details.
+- Added field history charts, manual readings, CSV upload, weather fallback display, and reading history.
+- Implemented irrigation decisions, farmer-friendly rule explanations, KB version display, history, and reasoned manual overrides.
+- Added system architecture/about content and a limitations/privacy notice linked to official DPDP Act 2023 and Rules 2025 sources.
+- Isolated typed preview data behind `VITE_ENABLE_API_MOCKS`; preview mode is visibly labelled and off by default.
+- Verification: `npm run lint` passed; `npm run build` passed with route-level code splitting and no chunk-size warning.
+- No browser end-to-end session or frontend test suite was run; the repository had no frontend test setup and E2E was excluded by the task.
+- Disease diagnosis, agronomist review, rule editing, and analytics remain deferred because those API workflows are not implemented in Phase 1.
