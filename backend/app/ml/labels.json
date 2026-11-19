@@ -1,0 +1,66 @@
+{
+  "class_order": [
+    "Leaf Blight",
+    "Rust",
+    "Powdery Mildew",
+    "Healthy"
+  ],
+  "classes": [
+    {
+      "index": 0,
+      "label": "Leaf Blight",
+      "source_folders": [
+        "Corn_(maize)___Northern_Leaf_Blight"
+      ]
+    },
+    {
+      "index": 1,
+      "label": "Rust",
+      "source_folders": [
+        "Corn_(maize)___Common_rust_"
+      ]
+    },
+    {
+      "index": 2,
+      "label": "Powdery Mildew",
+      "source_folders": [
+        "Cherry_(including_sour)___Powdery_mildew",
+        "Squash___Powdery_mildew"
+      ]
+    },
+    {
+      "index": 3,
+      "label": "Healthy",
+      "source_folders": [
+        "Corn_(maize)___healthy"
+      ]
+    }
+  ],
+  "input": {
+    "name": "images",
+    "layout": "NCHW",
+    "color": "RGB",
+    "size": [
+      224,
+      224
+    ],
+    "dtype": "float32",
+    "normalization": {
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ]
+    }
+  },
+  "output": {
+    "name": "probabilities",
+    "type": "softmax probabilities"
+  },
+  "quantization": "ONNX Runtime static QDQ int8 weights and uint8 activations"
+}

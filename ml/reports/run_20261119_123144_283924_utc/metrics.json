@@ -1,0 +1,128 @@
+{
+  "model_architecture": "torchvision.mobilenet_v2",
+  "pretrained_weights": "MobileNet_V2_Weights.DEFAULT",
+  "input_size": [
+    224,
+    224
+  ],
+  "random_seed": 42,
+  "device": "cuda",
+  "epochs_completed": 12,
+  "best_epoch": 12,
+  "stopped_by_time_budget": false,
+  "training_time_budget_minutes": 23.0,
+  "class_weights": [
+    1.5812159776687622,
+    1.306221842765808,
+    0.5388064384460449,
+    1.340384602546692
+  ],
+  "split_sizes": {
+    "train": 3485,
+    "validation": 746,
+    "test": 749
+  },
+  "class_order": [
+    "Leaf Blight",
+    "Rust",
+    "Powdery Mildew",
+    "Healthy"
+  ],
+  "overall_accuracy": 1.0,
+  "per_class": [
+    {
+      "class": "Leaf Blight",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 119
+    },
+    {
+      "class": "Rust",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 143
+    },
+    {
+      "class": "Powdery Mildew",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 347
+    },
+    {
+      "class": "Healthy",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 140
+    }
+  ],
+  "classification_report": {
+    "Leaf Blight": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 119.0
+    },
+    "Rust": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 143.0
+    },
+    "Powdery Mildew": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 347.0
+    },
+    "Healthy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 140.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 749.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 749.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      119,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      143,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      347,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      140
+    ]
+  ],
+  "test_examples": 749
+}

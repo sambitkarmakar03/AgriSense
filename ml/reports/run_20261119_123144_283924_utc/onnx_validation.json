@@ -1,0 +1,57 @@
+{
+  "sample_count": 5,
+  "samples": [
+    {
+      "image": "/kaggle/input/datasets/mohitsingh1804/plantvillage/PlantVillage/train/Corn_(maize)___Northern_Leaf_Blight/201bc21a-5372-4c91-a263-ea36ed96665a___RS_NLB  4628.JPG",
+      "true_label": "Leaf Blight",
+      "pytorch_prediction": "Leaf Blight",
+      "onnx_prediction": "Leaf Blight",
+      "max_absolute_probability_difference": 0.0007840991020202637,
+      "top1_match": true
+    },
+    {
+      "image": "/kaggle/input/datasets/mohitsingh1804/plantvillage/PlantVillage/train/Corn_(maize)___Common_rust_/RS_Rust 1935.JPG",
+      "true_label": "Rust",
+      "pytorch_prediction": "Rust",
+      "onnx_prediction": "Rust",
+      "max_absolute_probability_difference": 6.794929504394531e-05,
+      "top1_match": true
+    },
+    {
+      "image": "/kaggle/input/datasets/mohitsingh1804/plantvillage/PlantVillage/train/Cherry_(including_sour)___Powdery_mildew/3f56f44a-0a1b-4bf7-abda-d1893f44abc3___FREC_Pwd.M 5090.JPG",
+      "true_label": "Powdery Mildew",
+      "pytorch_prediction": "Powdery Mildew",
+      "onnx_prediction": "Powdery Mildew",
+      "max_absolute_probability_difference": 0.002115309238433838,
+      "top1_match": true
+    },
+    {
+      "image": "/kaggle/input/datasets/mohitsingh1804/plantvillage/PlantVillage/train/Corn_(maize)___healthy/57414792-9bc5-40c2-b7cb-b764a2531225___R.S_HL 8152 copy.jpg",
+      "true_label": "Healthy",
+      "pytorch_prediction": "Healthy",
+      "onnx_prediction": "Healthy",
+      "max_absolute_probability_difference": 0.00020319223403930664,
+      "top1_match": true
+    },
+    {
+      "image": "/kaggle/input/datasets/mohitsingh1804/plantvillage/PlantVillage/train/Corn_(maize)___healthy/154291fb-97ed-47ea-8323-ac0c099f54ec___R.S_HL 8041 copy 2.jpg",
+      "true_label": "Healthy",
+      "pytorch_prediction": "Healthy",
+      "onnx_prediction": "Healthy",
+      "max_absolute_probability_difference": 0.01937955617904663,
+      "top1_match": true
+    }
+  ],
+  "top1_matches_all_samples": true,
+  "max_absolute_probability_difference": 0.01937955617904663,
+  "tolerance": {
+    "rtol": 0.15,
+    "atol": 0.12
+  },
+  "probabilities_within_tolerance": true,
+  "int8_quantization_nodes": 99,
+  "int8_or_uint8_initializers": 205,
+  "providers": [
+    "CPUExecutionProvider"
+  ]
+}

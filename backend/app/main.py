@@ -7,7 +7,10 @@ from app.core.config import get_settings
 settings = get_settings()
 app = FastAPI(
     title="AgriSense API",
-    description="Explainable irrigation decision support for farmers. Disease diagnosis is reserved for a later phase.",
+    description=(
+        "Explainable irrigation decision support and four-class crop-leaf model inference. "
+        "Disease-rule fusion and human review workflows are not yet implemented."
+    ),
     version="0.1.0",
 )
 app.add_middleware(

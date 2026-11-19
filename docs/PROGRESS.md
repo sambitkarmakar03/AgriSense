@@ -67,5 +67,13 @@
 - Verified the Kaggle PlantVillage source folder names and fixed model output order; mapping is centralized in `ml/train.py`.
 - Added Kaggle notebook, separate training requirements, usage instructions, and report directory placeholder. Backend requirements and Phase 0–2 code remain unchanged.
 - Local verification: 4 ML helper tests passed; backend pytest passed (29); Python compile and notebook JSON/code-cell parsing passed.
-- Training was not run: this workspace has no PlantVillage dataset or usable CUDA training runtime. No trained model, labels, or evaluation reports are claimed or committed.
-- To generate deliverables, run `ml/train_kaggle.ipynb` on Kaggle with a GPU, Internet enabled, and PlantVillage attached; download its artifact ZIP after all parity checks pass.
+- At the initial pipeline handoff, no dataset/GPU was available and no model artifacts had been generated; the user later supplied the actual Kaggle outputs.
+
+## Phase 3 model and inference integration (2026-11-19)
+- Inspected the supplied training notebook and artifact ZIP; confirmed ONNX metadata, float32 tensor names/shapes, four-class order, Softmax output, and QDQ graph nodes.
+- Installed the supplied 2.67 MB ONNX model, matching labels, and 11 report files. Model SHA-256: `315b53e105e29331391dc0b3a66bf8d6f965ae6d1981dc217f4b0817ff994779`.
+- Supplied report records 12 CUDA epochs and 100% accuracy on 749 held-out PlantVillage images; these split metrics do not establish field-photo accuracy.
+- Added CPU-only ONNX inference with metadata validation, RGB conversion, EXIF orientation handling, ImageNet normalization, probability passthrough, and batching.
+- Wired authenticated `POST /fields/{field_id}/diagnose`; validates field ownership, image size, and upload rate, and stores prediction plus an EXIF-free 224x224 JPEG thumbnail.
+- The endpoint records raw CNN results only. Disease-rule fusion, confidence bands, feedback/history, and human review remain outstanding.
+- Verification: actual ONNX CPU smoke/batch inference passed; backend pytest passed (40); OpenAPI regenerated and matches the app; dependency check passed.

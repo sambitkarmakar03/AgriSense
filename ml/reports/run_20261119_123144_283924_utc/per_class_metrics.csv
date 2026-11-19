@@ -1,0 +1,5 @@
+class,precision,recall,f1_score,support
+Leaf Blight,1.0,1.0,1.0,119
+Rust,1.0,1.0,1.0,143
+Powdery Mildew,1.0,1.0,1.0,347
+Healthy,1.0,1.0,1.0,140

@@ -14,8 +14,8 @@ def health() -> HealthRead:
 def about_system() -> AboutSystemRead:
     return AboutSystemRead(
         inputs=["Field crop and growth stage", "Soil moisture and environmental readings", "24-hour weather forecast", "Recent disease diagnosis when available"],
-        outputs=["Irrigation ON/OFF", "Duration level", "Fired-rule trace", "Plain-language explanation and review flag"],
-        processor=["YAML-versioned knowledge base", "Forward-chaining inference engine", "Open-Meteo forecast proxy"],
+        outputs=["Irrigation ON/OFF", "Duration level", "Fired-rule trace", "Plain-language explanation and review flag", "Four-class leaf-model prediction and probabilities"],
+        processor=["YAML-versioned knowledge base", "Forward-chaining inference engine", "Open-Meteo forecast proxy", "MobileNetV2 ONNX Runtime on CPU"],
         feedback=["Farmer irrigation overrides and notes", "Consent log", "Future diagnosis confirmations and corrections"],
         interfaces=["Farmer web client", "Agronomist knowledge-base editor", "FastAPI JSON API"],
         boundary="Advice is decision support only. It does not replace an agronomist, sensor validation, or local judgment.",

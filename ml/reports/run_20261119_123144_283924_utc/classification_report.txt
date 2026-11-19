@@ -1,0 +1,10 @@
+                precision    recall  f1-score   support
+
+   Leaf Blight     1.0000    1.0000    1.0000       119
+          Rust     1.0000    1.0000    1.0000       143
+Powdery Mildew     1.0000    1.0000    1.0000       347
+       Healthy     1.0000    1.0000    1.0000       140
+
+      accuracy                         1.0000       749
+     macro avg     1.0000    1.0000    1.0000       749
+  weighted avg     1.0000    1.0000    1.0000       749

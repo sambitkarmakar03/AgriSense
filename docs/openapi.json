@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "AgriSense API",
-    "description": "Explainable irrigation decision support for farmers. Disease diagnosis is reserved for a later phase.",
+    "description": "Explainable irrigation decision support and four-class crop-leaf model inference. Disease-rule fusion and human review workflows are not yet implemented.",
     "version": "0.1.0"
   },
   "paths": {
@@ -963,6 +963,69 @@
           }
         }
       }
+    },
+    "/fields/{field_id}/diagnose": {
+      "post": {
+        "tags": [
+          "diagnosis"
+        ],
+        "summary": "Classify a leaf image",
+        "description": "Runs the four-class MobileNetV2 ONNX model and stores the model prediction and a sanitized 224x224 JPEG thumbnail for the farmer's field. This endpoint returns CNN output only; disease-rule fusion, confidence bands, and human review are not yet applied.",
+        "operationId": "diagnose_field_image_fields__field_id__diagnose_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Field Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_diagnose_field_image_fields__field_id__diagnose_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosisInferenceRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Field not found for the current user."
+          },
+          "413": {
+            "description": "Image exceeds the 5 MiB limit."
+          },
+          "422": {
+            "description": "Uploaded file is not a readable image."
+          },
+          "429": {
+            "description": "Per-user image upload rate limit exceeded."
+          },
+          "503": {
+            "description": "ONNX model or runtime is unavailable."
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1028,6 +1091,20 @@
         ],
         "title": "AboutSystemRead"
       },
+      "Body_diagnose_field_image_fields__field_id__diagnose_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_diagnose_field_image_fields__field_id__diagnose_post"
+      },
       "Body_upload_readings_csv_fields__field_id__readings_csv_post": {
         "properties": {
           "file": {
@@ -1062,6 +1139,50 @@
           "readings"
         ],
         "title": "CSVImportResponse"
+      },
+      "DiagnosisInferenceRead": {
+        "properties": {
+          "diagnosis_id": {
+            "type": "integer",
+            "title": "Diagnosis Id"
+          },
+          "field_id": {
+            "type": "integer",
+            "title": "Field Id"
+          },
+          "predicted_label": {
+            "type": "string",
+            "title": "Predicted Label"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence"
+          },
+          "probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Probabilities"
+          },
+          "status": {
+            "type": "string",
+            "const": "auto",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "diagnosis_id",
+          "field_id",
+          "predicted_label",
+          "confidence",
+          "probabilities",
+          "status"
+        ],
+        "title": "DiagnosisInferenceRead"
       },
       "FieldCreate": {
         "properties": {

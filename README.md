@@ -2,9 +2,9 @@
 
 AgriSense is a decision-support project for farmers. Its first implemented module provides explainable smart-irrigation recommendations; the broader specification also describes crop-disease diagnosis and agronomist review.
 
-> **Current status:** Phase 0 and Phase 1 are complete. The backend, irrigation rules, database schema, tests, and OpenAPI artifact are implemented. The frontend, disease-detection workflow, CI, and deployment are not implemented. There are no live service URLs.
+> **Current status:** Phases 0–3 are complete. The React frontend, irrigation backend, trained four-class ONNX model, and authenticated raw disease-inference endpoint are present. Disease-rule fusion, confidence bands, review/feedback workflows, CI, and deployment remain unfinished. There are no live service URLs.
 
-## What Phase 1 provides
+## Implemented capabilities
 
 - FastAPI with JWT bearer authentication, Argon2id password hashing, farmer/agronomist roles, consent logging, and account deletion.
 - Farmer-owned field management and sensor readings, including CSV import and reading history.
@@ -12,7 +12,8 @@ AgriSense is a decision-support project for farmers. Its first implemented modul
 - YAML-driven irrigation knowledge bases v1 and v2, forward-chaining inference, fired-rule explanations, decision history, and manual overrides.
 - Versioned irrigation knowledge-base retrieval and updates by an agronomist.
 - SQLAlchemy 2 models and an Alembic initial migration for SQLite locally and PostgreSQL in deployment.
-- A disease-inference integration stub only; image diagnosis and related endpoints are deferred.
+- CPU-only ONNX Runtime inference for Leaf Blight, Rust, Powdery Mildew, and Healthy, with the model and matching labels under `backend/app/ml/`.
+- Authenticated `POST /fields/{field_id}/diagnose` with ownership checks, a 5 MiB upload cap, per-user upload rate limiting, image normalization, and sanitized thumbnail storage. It returns the raw model prediction; disease-rule fusion and human review are not part of this endpoint yet.
 
 The full technical requirements remain in [docs/SPEC.md](docs/SPEC.md), and [docs/PROGRESS.md](docs/PROGRESS.md) records completed work, verification, and known limitations.
 
@@ -20,22 +21,23 @@ The full technical requirements remain in [docs/SPEC.md](docs/SPEC.md), and [doc
 
 ```mermaid
 flowchart LR
-    Farmer[Farmer] --> Web[Planned React web app]
+    Farmer[Farmer] --> Web[React web app]
     Agronomist[Agronomist] --> Web
     Web --> API[Implemented FastAPI API]
     API --> Rules[YAML irrigation knowledge bases + inference engine]
     API --> DB[(SQLite locally / PostgreSQL target)]
     API --> Weather[Open-Meteo]
-    API -. future integration .-> Disease[Crop-disease inference stub]
+    API --> Disease[ONNX CPU leaf classifier]
 ```
 
 ## Repository layout
 
-- `backend/app/` — FastAPI routes, configuration, security, SQLAlchemy models, irrigation engine, and disease-inference stub.
+- `backend/app/` — FastAPI routes, configuration, security, SQLAlchemy models, irrigation engine, and ONNX disease inference.
 - `backend/alembic/` — initial database migration and Alembic configuration.
 - `backend/tests/` — API, security, ownership, versioning, and irrigation tests.
 - `docs/SPEC.md` — complete requirements; `docs/openapi.json` — generated API contract.
-- `frontend/`, `ml/`, `scripts/`, and `.github/workflows/` — Phase 0 placeholders for later work.
+- `frontend/` — React farmer workspace; `ml/` — training notebook/script and model evaluation reports.
+- `scripts/` and `.github/workflows/` — project setup and CI scaffolding.
 - `AGENTS.md` and `GEMINI.md` — project guidance for Codex and Antigravity.
 
 ## Run the backend locally
@@ -76,13 +78,13 @@ Run backend tests from `backend/`:
 python -m pytest -q
 ```
 
-The latest audit passed 29 tests. It also verified the SQLite migration cycle and generated PostgreSQL migration DDL. No live PostgreSQL deployment has been tested.
+The backend test suite passed 40 tests after the inference integration. The previous audit also verified the SQLite migration cycle and generated PostgreSQL migration DDL. No live PostgreSQL deployment has been tested.
 
 ## Available API areas
 
-Authentication and current-user management; field CRUD; manual and CSV readings; weather; irrigation decisions, history, and overrides; irrigation knowledge-base retrieval/versioning; `/health`; and `/about/system`.
+Authentication and current-user management; field CRUD; manual and CSV readings; weather; irrigation decisions, history, and overrides; irrigation knowledge-base retrieval/versioning; `POST /fields/{field_id}/diagnose` (raw model inference); `/health`; and `/about/system`.
 
-Disease diagnosis, diagnosis feedback/history/review, review queue, and analytics are specified but intentionally not implemented yet. The disease module remains a stub, and the frontend and later project phases have not started.
+Disease-rule fusion, confidence-band assignment, diagnosis feedback/history/review APIs, agronomist review queue, and analytics remain unimplemented. The current endpoint stores and returns the CNN result only. Review [docs/PROGRESS.md](docs/PROGRESS.md) and the limitations page before using model results.
 
 ## Roadmap
 
@@ -90,9 +92,9 @@ Disease diagnosis, diagnosis feedback/history/review, review queue, and analytic
 |---|---|---|
 | 0 | Project structure, rules, specification, environment example, and Git foundation | Complete |
 | 1 | Backend, irrigation expert system, migrations, tests, and OpenAPI contract | Complete |
-| 2 | Frontend and integration | Not started |
-| 3 | Crop-disease model training | Not started |
-| 4 | Disease inference and diagnosis workflows | Not started |
+| 2 | Frontend and integration | Complete |
+| 3 | Crop-disease model training | Complete; supplied run artifacts included |
+| 4 | Disease inference and diagnosis workflows | In progress; raw inference endpoint only |
 | 5 | Frontend integration and browser verification | Not started |
 | 6 | Cross-platform CI and deployment configuration | Not started |
 | 7 | Deployment and live smoke test | Not started |

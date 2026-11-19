@@ -1,0 +1,73 @@
+{
+  "dataset_root": "/kaggle/input/datasets/mohitsingh1804/plantvillage/PlantVillage/train",
+  "mapping": {
+    "Leaf Blight": [
+      "Corn_(maize)___Northern_Leaf_Blight"
+    ],
+    "Rust": [
+      "Corn_(maize)___Common_rust_"
+    ],
+    "Powdery Mildew": [
+      "Cherry_(including_sour)___Powdery_mildew",
+      "Squash___Powdery_mildew"
+    ],
+    "Healthy": [
+      "Corn_(maize)___healthy"
+    ]
+  },
+  "source_folders_found": {
+    "Leaf Blight": [
+      "Corn_(maize)___Northern_Leaf_Blight"
+    ],
+    "Rust": [
+      "Corn_(maize)___Common_rust_"
+    ],
+    "Powdery Mildew": [
+      "Cherry_(including_sour)___Powdery_mildew",
+      "Squash___Powdery_mildew"
+    ],
+    "Healthy": [
+      "Corn_(maize)___healthy"
+    ]
+  },
+  "image_counts": {
+    "Leaf Blight": 788,
+    "Rust": 953,
+    "Powdery Mildew": 2310,
+    "Healthy": 929
+  },
+  "corrupt_images_skipped": 0,
+  "corrupt_image_examples": [],
+  "class_order": [
+    "Leaf Blight",
+    "Rust",
+    "Powdery Mildew",
+    "Healthy"
+  ],
+  "split_counts": {
+    "train": {
+      "Leaf Blight": 551,
+      "Rust": 667,
+      "Powdery Mildew": 1617,
+      "Healthy": 650
+    },
+    "validation": {
+      "Leaf Blight": 118,
+      "Rust": 143,
+      "Powdery Mildew": 346,
+      "Healthy": 139
+    },
+    "test": {
+      "Leaf Blight": 119,
+      "Rust": 143,
+      "Powdery Mildew": 347,
+      "Healthy": 140
+    }
+  },
+  "split_sizes": {
+    "train": 3485,
+    "validation": 746,
+    "test": 749
+  },
+  "random_seed": 42
+}

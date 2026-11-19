@@ -103,6 +103,15 @@ class ReadingRead(ORMModel):
     source: str
 
 
+class DiagnosisInferenceRead(BaseModel):
+    diagnosis_id: int
+    field_id: int
+    predicted_label: str
+    confidence: float = Field(ge=0, le=1)
+    probabilities: dict[str, float]
+    status: Literal["auto"]
+
+
 class CSVImportResponse(BaseModel):
     imported: int
     readings: list[ReadingRead]

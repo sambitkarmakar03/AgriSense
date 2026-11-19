@@ -2,7 +2,9 @@
 
 This directory contains the Phase 3 training and export pipeline for a four-class crop leaf classifier. It fine-tunes an ImageNet-pretrained MobileNetV2 in PyTorch, evaluates the held-out test set, exports a static quantized int8 ONNX model, and checks ONNX Runtime parity against PyTorch on five test images.
 
-No training has been run in this repository yet. There is no dataset or usable training GPU in the current development environment, so no model, labels file, or evaluation report is claimed as generated. A successful run writes the actual artifacts to `backend/app/ml/model.onnx`, `backend/app/ml/labels.json`, and a timestamped directory under `ml/reports/`.
+The trained model and run reports from the supplied Kaggle execution are now installed in this repository. Its report records 12 CUDA epochs, a 3,485/746/749 train/validation/test split, 100% accuracy on those 749 held-out PlantVillage images, and successful five-image PyTorch/ONNX parity with a maximum probability difference of 0.0194. These are results on a random PlantVillage split, not evidence of field-photo accuracy; the notebook notes background and crop-source shortcuts in this dataset.
+
+The delivered model is `backend/app/ml/model.onnx` (SHA-256 `315b53e105e29331391dc0b3a66bf8d6f965ae6d1981dc217f4b0817ff994779`), with matching output order in `backend/app/ml/labels.json`. Full evaluation and export reports are under `ml/reports/run_20261119_123144_283924_utc/`.
 
 ## Dataset and class mapping
 
@@ -34,7 +36,7 @@ Reports are written under a unique `ml/reports/run_<UTC timestamp>/` directory. 
 
 ## Run locally
 
-Use Python 3.11 or newer and a CUDA-enabled PyTorch installation for practical training speed. Install the ML dependencies in a dedicated environment; these requirements are separate from the backend runtime:
+Use Python 3.11 or newer and a CUDA-enabled PyTorch installation for practical training speed. Install the training stack in a dedicated environment. PyTorch, torchvision, scikit-learn, and matplotlib stay out of the backend; the backend installs only ONNX Runtime, NumPy, and Pillow for inference:
 
 ```bash
 python -m venv .venv-ml
@@ -68,4 +70,10 @@ python -m pip install -r ml/requirements.txt
 python ml/train.py --dataset-root /kaggle/input/plantvillage-dataset --max-minutes 23
 ```
 
-Training and export must complete successfully before model artifacts exist. If validation or five-image ONNX parity fails, the script exits with an error and does not install a new model/labels pair; inspect the timestamped run reports before trying again.
+For future retraining runs, artifacts are installed only after training, evaluation, and five-image ONNX parity succeed. If validation or parity fails, the script exits without installing a new model/labels pair; inspect that run's timestamped reports before trying again.
+
+## Backend inference
+
+The CPU-only service in `backend/app/ml/inference.py` checks the ONNX graph metadata, `labels.json`, and dynamic tensor shapes when it loads the session. It converts grayscale/RGBA inputs to RGB, applies the same resize and ImageNet normalization, and returns the graph's softmax probabilities without applying another softmax. The authenticated `POST /fields/{field_id}/diagnose` endpoint stores the raw model result and an EXIF-free 224x224 JPEG thumbnail. Rule fusion, confidence-band assignment, and human review are still pending.
+
+From the `backend/` directory, install `requirements.txt` and run `python -m app.ml.verify_model` for a synthetic-image smoke check. Use `python -m app.ml.verify_model --image /path/to/leaf.jpg` for a real image or repeat `--image` to check batching.

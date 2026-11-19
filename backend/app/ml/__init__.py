@@ -1,1 +1,1 @@
-"""Reserved for the future crop-disease inference integration."""
+"""CPU ONNX inference for AgriSense crop-disease images."""
