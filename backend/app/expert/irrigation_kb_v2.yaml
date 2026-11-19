@@ -1,0 +1,75 @@
+version: v2
+thresholds:
+  moisture:
+    low_below_pct: 30
+    medium_through_pct: 60
+  rain:
+    none_below_mm: 1
+    light_through_mm: 10
+  hot_above_c: 36
+  fungal_diagnosis_within_days: 7
+  fungal_labels:
+    - Powdery Mildew
+    - Blight
+    - Leaf Blight
+    - Rust
+rules:
+  - id: IR-2
+    priority: 1
+    conditions:
+      rain_category: heavy
+    action:
+      set:
+        action: "OFF"
+    explanation: Heavy forecast rain means irrigation is turned off.
+  - id: IR-1
+    priority: 10
+    conditions:
+      moisture_category: low
+      rain_category: none
+    action:
+      set:
+        action: "ON"
+    explanation: Low soil moisture with no forecast rain indicates irrigation is needed.
+  - id: IR-4
+    priority: 11
+    conditions:
+      moisture_category: medium
+      rain_category: none
+      hot: true
+    action:
+      set:
+        action: "ON"
+        duration_level: short
+    explanation: Medium soil moisture with no rain during hot weather calls for a short irrigation cycle.
+  - id: IR-5
+    priority: 12
+    conditions:
+      moisture_category: low
+      rain_category: light
+      crop_stage: Seedling
+    action:
+      set:
+        action: "ON"
+        duration_level: low_volume
+    explanation: A seedling with low soil moisture and light rain receives low-volume irrigation.
+  - id: IR-3
+    priority: 20
+    conditions:
+      crop_stage: Flowering
+      hot: true
+      action: "ON"
+    action:
+      set:
+        duration_level: increased
+    explanation: Hot conditions during flowering increase the irrigation duration.
+  - id: IR-6
+    priority: 30
+    conditions:
+      recent_fungal_diagnosis: true
+      humidity_pct:
+        gt: 80
+      action: "ON"
+    action:
+      advisory: Avoid overhead or evening watering; prefer drip.
+    explanation: Recent fungal disease risk changes the watering advisory.

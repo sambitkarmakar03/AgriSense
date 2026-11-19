@@ -1,0 +1,43 @@
+version: v1
+thresholds:
+  moisture:
+    low_below_pct: 30
+    medium_through_pct: 60
+  rain:
+    none_below_mm: 1
+    light_through_mm: 10
+  hot_above_c: 36
+  fungal_diagnosis_within_days: 7
+  fungal_labels:
+    - Powdery Mildew
+    - Blight
+    - Leaf Blight
+    - Rust
+rules:
+  - id: IR-2
+    priority: 1
+    conditions:
+      rain_category: heavy
+    action:
+      set:
+        action: "OFF"
+    explanation: Heavy forecast rain means irrigation is turned off.
+  - id: IR-1
+    priority: 10
+    conditions:
+      moisture_category: low
+      rain_category: none
+    action:
+      set:
+        action: "ON"
+    explanation: Low soil moisture with no forecast rain indicates irrigation is needed.
+  - id: IR-3
+    priority: 20
+    conditions:
+      crop_stage: Flowering
+      hot: true
+      action: "ON"
+    action:
+      set:
+        duration_level: increased
+    explanation: Hot conditions during flowering increase the irrigation duration.
